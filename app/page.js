@@ -1,95 +1,48 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+import { Typography, Box, Button } from "@mui/material";
+import { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "./firebase";
 
 export default function Home() {
+  // const [user, setUser] = useState(null);
+  // useEffect(() => {
+  //   onAuthStateChanged(auth, user => {
+  //     if (user) {
+  //       setUser(user);
+  //     } else {
+  //       setUser(null);
+  //     }
+  //   });
+  // }, []);
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.js</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+    <Box display={"flex"} flexDirection={"column"} justifyContent={"space-around"} width={"100vw"} height={"100vh"}>
+      <Box display={"flex"} flexDirection={"column"} justifyContent={"center"} alignItems={"center"}>
+        <Typography variant="h2" fontWeight={"bold"}>
+          Welcome to Pantry Manager
+        </Typography>
+        <Typography marginTop={".1em"}>Easily manage your pantry items and keep track of what you have.</Typography>
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+        <Button variant="contained" sx={{ marginTop: ".9em" }}>
+          Get Started
+        </Button>
+      </Box>
 
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+      <Box display={"flex"} justifyContent={"space-evenly"} textAlign={"center"} marginTop={"1em"}>
+        <Box>
+          <Typography variant="h4">Easy to use</Typography>
+          <Typography> Our user-friendly interface makes it easy to manage </Typography>
+        </Box>
+        <Box>
+          <Typography variant="h4">Track Items</Typography>
+          <Typography> Keep track of inventory</Typography>
+        </Box>
+        <Box>
+          <Typography variant="h4">Manage Items</Typography>
+          <Typography>Add/Delete inventory</Typography>
+        </Box>
+      </Box>
+    </Box>
   );
 }
