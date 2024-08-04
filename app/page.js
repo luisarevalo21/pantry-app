@@ -1,21 +1,6 @@
-"use client";
 import { Typography, Box, Button } from "@mui/material";
-import { useEffect, useState } from "react";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "./firebase";
 
 export default function Home() {
-  // const [user, setUser] = useState(null);
-  // useEffect(() => {
-  //   onAuthStateChanged(auth, user => {
-  //     if (user) {
-  //       setUser(user);
-  //     } else {
-  //       setUser(null);
-  //     }
-  //   });
-  // }, []);
-
   return (
     <Box display={"flex"} flexDirection={"column"} justifyContent={"space-around"} width={"100vw"} height={"100vh"}>
       <Box display={"flex"} flexDirection={"column"} justifyContent={"center"} alignItems={"center"}>

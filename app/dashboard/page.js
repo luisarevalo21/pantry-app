@@ -1,10 +1,8 @@
 "use client";
 import {
   Box,
-  Stack,
   Typography,
   Button,
-  Modal,
   TextField,
   Container,
   Table,
@@ -12,17 +10,20 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  FormControl,
 } from "@mui/material";
 import { db, auth } from "../firebase";
-import { redirect, useRouter } from "next/navigation";
-
-import { collection, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
+import { useRouter } from "next/navigation";
+import { styled, alpha } from "@mui/material/styles";
+import SearchIcon from "@mui/icons-material/Search";
+import { ClickAwayListener } from "@mui/material";
+import { collection, getDocs, doc, setDoc, deleteDoc, where, query } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import { onAuthStateChanged } from "firebase/auth";
+import { InputBase } from "@mui/material";
 
 const style = {
   transform: "translate(-50%, -50%)",
@@ -30,33 +31,85 @@ const style = {
   flexDirection: "column",
 };
 
-// const items = ["potatoe", "tomato", "onion", "carrot", "cucumber", "apple", "banana"];
+const Search = styled("div")(({ theme }) => ({
+  position: "relative",
+  borderRadius: theme.shape.borderRadius,
+  backgroundColor: alpha(theme.palette.common.white, 0.15),
+  "&:hover": {
+    backgroundColor: alpha(theme.palette.common.white, 0.25),
+  },
+  marginLeft: 0,
+  width: "100%",
+  border: "1px solid black",
+  [theme.breakpoints.up("sm")]: {
+    marginLeft: theme.spacing(1),
+    width: "auto",
+  },
+}));
+
+const SearchIconWrapper = styled("div")(({ theme }) => ({
+  padding: theme.spacing(0, 2),
+  height: "100%",
+  position: "absolute",
+  pointerEvents: "none",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+}));
+
+const StyledInputBase = styled(InputBase)(({ theme }) => ({
+  color: "inherit",
+  width: "100%",
+  "& .MuiInputBase-input": {
+    padding: theme.spacing(1, 1, 1, 0),
+    // vertical padding + font size from searchIcon
+    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+    transition: theme.transitions.create("width"),
+    [theme.breakpoints.up("sm")]: {
+      width: "12ch",
+      "&:focus": {
+        width: "20ch",
+      },
+    },
+  },
+}));
 
 export default function Home() {
   const router = useRouter();
   const [items, setItems] = useState([]);
-  const [open, setOpen] = useState(false);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
   const [newItem, setNewItem] = useState("");
 
+  const [rowIndex, setRowIndex] = useState(-1);
+  const [columnIndex, setColumnIndex] = useState(-1);
   const [quantity, setQuantity] = useState(0);
+  const [search, setSearch] = useState("");
 
   const getItems = async () => {
     const pantryList = [];
+
     const querySnapshot = await getDocs(collection(db, "pantry"));
     querySnapshot.forEach(doc => {
       pantryList.push(doc.data());
     });
     setItems(pantryList);
   };
-  // useEffect(() => {
-  //   getItems();
-  // }, []);
+  const getItem = async search => {
+    if (!search) {
+      getItems();
+      return;
+    }
+    const q = query(collection(db, "pantry"), where("name", "==", search));
+
+    const pantryList = [];
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach(doc => {
+      pantryList.push(doc.data());
+    });
+    setItems(pantryList);
+  };
 
   useEffect(() => {
     onAuthStateChanged(auth, user => {
-      console.log("auth", auth);
       if (auth.currentUser) {
         getItems();
       }
@@ -65,11 +118,20 @@ export default function Home() {
       }
     });
   }, []);
-  // const handleAddItem = async item => {
-  //   // const docRef = doc(collection(firestore, "pantry"), item);
-  //   await setDoc(doc(collection(firestore, "pantry"), item), {});
-  //   getItems();
-  // };
+
+  const handleTextFieldChange = async (rowIndex, columnIndex, value) => {
+    const newItems = items.map((item, i) => {
+      if (i === rowIndex) {
+        return { ...item, [columnIndex]: value };
+      }
+      return item;
+    });
+    setItems(newItems);
+
+    const docRef = doc(collection(db, "pantry"), items[rowIndex].name);
+    await setDoc(docRef, { name: items[rowIndex].name, quantity: value });
+    getItems();
+  };
   async function handleSubmit(e) {
     e.preventDefault();
     if (!newItem || !quantity) {
@@ -86,21 +148,21 @@ export default function Home() {
     getItems();
   }
 
-  async function incrementItem(item) {
-    const docRef = doc(collection(db, "pantry"), item.name);
-    await setDoc(docRef, { name: item.name, quantity: +item.quantity + 1 });
-    getItems();
-  }
+  // async function incrementItem(item) {
+  //   const docRef = doc(collection(db, "pantry"), item.name);
+  //   await setDoc(docRef, { name: item.name, quantity: +item.quantity + 1 });
+  //   getItems();
+  // }
 
-  async function decrementItem(item) {
-    if (item.quantity === 0) {
-      // removeItem(item);
-      return;
-    }
-    const docRef = doc(collection(db, "pantry"), item.name);
-    await setDoc(docRef, { name: item.name, quantity: +item.quantity - 1 });
-    getItems();
-  }
+  // async function decrementItem(item) {
+  //   if (item.quantity === 0) {
+  //     // removeItem(item);
+  //     return;
+  //   }
+  //   const docRef = doc(collection(db, "pantry"), item.name);
+  //   await setDoc(docRef, { name: item.name, quantity: +item.quantity - 1 });
+  //   getItems();
+  // }
   //remove based on quanitty not item itself
   const removeItem = async item => {
     const docRef = doc(collection(db, "pantry"), item.name);
@@ -108,57 +170,35 @@ export default function Home() {
     getItems();
   };
 
-  const editItem = async () => {
-    return;
-  };
+  const editItem = async () => {};
 
+  const handleSearch = async e => {
+    e.preventDefault();
+
+    if (search === "") {
+      getItems();
+      return;
+    }
+    if (search) {
+      getItem(search);
+    }
+  };
   return (
     <>
       <Box width={"100vw"} height={"100vh"} display={"flex"} flexDirection={"row"} justifyContent={"start"} gap={5}>
-        <Modal
-          open={open}
-          onClose={handleClose}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
-        >
-          <Box
-            style={style}
-            position={"absolute"}
-            left="50%"
-            top={"50%"}
-            width={400}
-            bgcolor="background.paper"
-            border="2px solid #000"
-            boxShadow={24}
-            p={2}
-            gap={3}
-          >
-            <Typography id="modal-modal-title" variant="h6" component="h2">
-              Add
-            </Typography>
-            <Stack width="100%" direction={"row"} spacing={2}>
-              <TextField
-                id="outlined-basic"
-                label="Outlined"
-                variant="outlined"
-                fullWidth
-                value={newItem}
-                onChange={e => setNewItem(e.target.value)}
-              />
-              <Button
-                variant="contained"
-                onClick={() => {
-                  handleAddItem(newItem);
-                  setNewItem("");
-                  handleClose();
-                }}
-              >
-                Add
-              </Button>
-            </Stack>
-          </Box>
-        </Modal>
         <Container sx={{ width: "80vw", height: "50vh", marginTop: "2rem" }}>
+          <form onSubmit={handleSearch}>
+            <Search>
+              <SearchIconWrapper>
+                <SearchIcon />
+              </SearchIconWrapper>
+              <StyledInputBase
+                placeholder="Search…"
+                inputProps={{ "aria-label": "search" }}
+                onChange={e => setSearch(e.target.value)}
+              />
+            </Search>
+          </form>
           <Typography variant="h2" textAlign={"center"}>
             Pantry Management
           </Typography>
@@ -185,33 +225,74 @@ export default function Home() {
             </form>
           </Box>
 
-          <Table sx={{ width: "100%", marginTop: "1em" }}>
-            <TableHead>
-              <TableRow>
-                <TableCell align="center">Item Name</TableCell>
-                <TableCell align="center">Quanity</TableCell>
-                <TableCell align="center">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-
-            <TableBody>
-              {items.map((item, i) => (
-                <TableRow key={i}>
-                  <TableCell component={"td"} align="center" sx={{ fontSize: "1.2rem" }}>
-                    {item.name}
-                  </TableCell>
-                  <TableCell component={"td"} align="center" sx={{ fontSize: "1.2rem" }} typeof="number">
-                    {item.quantity}
-                  </TableCell>
-                  <TableCell component={"td"} align="center" sx={{ fontSize: "1.2rem" }}>
-                    <AddIcon onClick={() => incrementItem(item)} />
-                    <RemoveIcon onClick={() => decrementItem(item)} />
-                    <DeleteIcon onClick={() => removeItem(item)} />
-                  </TableCell>
+          <ClickAwayListener
+            onClickAway={() => {
+              setRowIndex(-1);
+              setColumnIndex(-1);
+            }}
+          >
+            <Table sx={{ width: "100%", marginTop: "1em" }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell align="center">Item Name</TableCell>
+                  <TableCell align="center">Quanity</TableCell>
+                  <TableCell align="center">Actions</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHead>
+
+              <TableBody>
+                {items.length === 0 && (
+                  <TableRow>
+                    <TableCell component={"td"} align="center" sx={{ fontSize: "1.2rem" }}>
+                      No items found
+                    </TableCell>
+                  </TableRow>
+                )}
+                {items.map((item, i) => (
+                  <TableRow key={i}>
+                    <TableCell component={"td"} align="center" sx={{ fontSize: "1.2rem" }}>
+                      {item.name}
+                    </TableCell>
+                    <TableCell
+                      component={"td"}
+                      align="center"
+                      sx={{ fontSize: "1.2rem", cursor: "pointer" }}
+                      typeof="number"
+                      onClick={() => {
+                        setRowIndex(i);
+                        setColumnIndex(1);
+                      }}
+                    >
+                      {rowIndex === i && columnIndex === 1 ? (
+                        <TextField
+                          placeholder={item.quantity}
+                          type="number"
+                          defaultValue={item.quantity}
+                          onChange={e => {
+                            handleTextFieldChange(i, "quantity", e.target.value);
+                          }}
+                          onKeyDown={e => {
+                            if (e.key === "Enter") {
+                              setRowIndex(-1);
+                              setColumnIndex(-1);
+                            }
+                          }}
+                        />
+                      ) : (
+                        item.quantity
+                      )}
+                    </TableCell>
+                    <TableCell component={"td"} align="center" sx={{ fontSize: "1.2rem" }}>
+                      {/* <AddIcon onClick={() => incrementItem(item)} />
+                    <RemoveIcon onClick={() => decrementItem(item)} /> */}
+                      {/* <EditIcon onClick={() => editItem(item)} /> */}
+                      <DeleteIcon onClick={() => removeItem(item)} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ClickAwayListener>
         </Container>
       </Box>
     </>
