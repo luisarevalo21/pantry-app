@@ -145,32 +145,16 @@ export default function Home() {
 
     const docRef = doc(collection(db, "pantry"), item.name);
     await setDoc(docRef, item);
+    setQuantity("");
+    setNewItem("");
     getItems();
   }
 
-  // async function incrementItem(item) {
-  //   const docRef = doc(collection(db, "pantry"), item.name);
-  //   await setDoc(docRef, { name: item.name, quantity: +item.quantity + 1 });
-  //   getItems();
-  // }
-
-  // async function decrementItem(item) {
-  //   if (item.quantity === 0) {
-  //     // removeItem(item);
-  //     return;
-  //   }
-  //   const docRef = doc(collection(db, "pantry"), item.name);
-  //   await setDoc(docRef, { name: item.name, quantity: +item.quantity - 1 });
-  //   getItems();
-  // }
-  //remove based on quanitty not item itself
   const removeItem = async item => {
     const docRef = doc(collection(db, "pantry"), item.name);
     await deleteDoc(docRef);
     getItems();
   };
-
-  const editItem = async () => {};
 
   const handleSearch = async e => {
     e.preventDefault();
@@ -208,12 +192,17 @@ export default function Home() {
                 label="Item Name"
                 required
                 margin="20px"
+                value={newItem}
                 onChange={e => setNewItem(e.target.value)}
               ></TextField>
               <TextField
                 type="number"
                 label="Quanity"
                 required
+                value={quantity}
+                InputProps={{
+                  inputProps: { min: 0 },
+                }}
                 sx={{ marginLeft: "2em" }}
                 onChange={e => {
                   setQuantity(e.target.value);
@@ -267,6 +256,9 @@ export default function Home() {
                         <TextField
                           placeholder={item.quantity}
                           type="number"
+                          InputProps={{
+                            inputProps: { min: 0 },
+                          }}
                           defaultValue={item.quantity}
                           onChange={e => {
                             handleTextFieldChange(i, "quantity", e.target.value);
